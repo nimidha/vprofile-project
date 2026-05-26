@@ -17,10 +17,15 @@ pipeline {
             steps {
                 echo 'Initializing SonarQube Code Security Scan...'
                 
-                // This block forces Jenkins to download and configure 'maven3' right here
                 withEnv(["PATH+MAVEN=${tool 'maven3'}/bin"]) {
                     withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                        sh 'mvn clean sonar:sonar'
+                        // Added explicit project definitions and token authentication strings
+                        sh '''
+                            mvn clean sonar:sonar \
+                            -Dsonar.projectKey=vprofile-project \
+                            -Dsonar.projectName=vprofile-project \
+                            -Dsonar.login=$SONAR_AUTH_TOKEN
+                        '''
                     }
                 }
             }
