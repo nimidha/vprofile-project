@@ -18,10 +18,11 @@ pipeline {
                 echo 'Initializing SonarQube Code Security Scan...'
                 
                 withEnv(["PATH+MAVEN=${tool 'maven3'}/bin"]) {
-                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                        // Added explicit project definitions and token authentication strings
+                    withSonarQubeEnv('sonar-server') {
+                        // Added explicit host URL pointing to the internal docker network service
                         sh '''
                             mvn clean sonar:sonar \
+                            -Dsonar.host.url=http://devsecops-sonarqube:9000 \
                             -Dsonar.projectKey=vprofile-project \
                             -Dsonar.projectName=vprofile-project \
                             -Dsonar.login=$SONAR_AUTH_TOKEN
@@ -30,7 +31,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Quality Gate Checklist') {
             steps {
                 echo 'Checking SonarQube Quality Gate Status...'
