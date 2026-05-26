@@ -3,19 +3,17 @@ version: '3.8'
 services:
   # 1. Jenkins Orchestrator
   jenkins:
-    image: jenkins/jenkins:lts-jdk17
     container_name: devsecops-jenkins
-    user: root
+    image: jenkins/jenkins:lts-jdk17
     ports:
       - "8081:8080"
       - "50000:50000"
     volumes:
-      - jenkins_data:/var/jenkins_home
-      # Allows Jenkins to run Docker commands on your host system
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./volume/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock    # <--- CRUCIAL: Gives Jenkins access to host Docker
     networks:
       - devsecops-network
-
+    user: root                                       # <--- CRUCIAL: Grants permissions to read the socket
   # 2. SonarQube (SAST Code Quality)
   sonarqube:
     image: sonarqube:lts-community
@@ -32,19 +30,15 @@ services:
       - devsecops-network
 
   # 3. LocalStack (Mock AWS ECR Cloud Environment)
-  localstack:
-    image: localstack/localstack:latest
-    container_name: devsecops-localstack
-    user: root            
-    privileged: true
+  local-registry:
+    container_name: devsecops-registry
+    image: registry:2
     ports:
-      - "4567:4566"
+      - "127.0.0.1:5001:5000"            # Map host port 5001 to container port 5000
     environment:
-      - SERVICES=ecr
-      - AWS_DEFAULT_REGION=us-east-1
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     volumes:
-      - localstack_data:/var/lib/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
+      - "./volume/registry:/var/lib/registry"
     networks:
       - devsecops-network
 
