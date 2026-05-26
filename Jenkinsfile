@@ -21,7 +21,7 @@ pipeline {
                 echo 'Initializing SonarQube Code Security Scan...'
                 withSonarQubeEnv("${SONAR_SERVER_NAME}") {
                     // This runs the Maven sonar plugin built into the project pom.xml
-                    sh './mvnw clean sonar:sonar'
+                    sh 'mvn clean sonar:sonar'
                 }
             }
         }
