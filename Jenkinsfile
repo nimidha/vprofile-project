@@ -19,19 +19,19 @@ pipeline {
                 
                 withEnv(["PATH+MAVEN=${tool 'maven3'}/bin"]) {
                     withSonarQubeEnv('sonar-server') {
-                        // Added explicit host URL pointing to the internal docker network service
                         sh '''
-                            mvn clean sonar:sonar \
+                            mvn clean compile sonar:sonar \
                             -Dsonar.host.url=http://devsecops-sonarqube:9000 \
                             -Dsonar.projectKey=vprofile-project \
                             -Dsonar.projectName=vprofile-project \
+                            -Dsonar.java.binaries=target/classes \
                             -Dsonar.login=$SONAR_AUTH_TOKEN
                         '''
                     }
                 }
             }
         }
-        
+
         stage('Quality Gate Checklist') {
             steps {
                 echo 'Checking SonarQube Quality Gate Status...'
