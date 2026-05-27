@@ -5,15 +5,29 @@ services:
   jenkins:
     container_name: devsecops-jenkins
     image: jenkins/jenkins:lts-jdk17
+    user: root
     ports:
       - "8081:8080"
       - "50000:50000"
     volumes:
       - ./volume/jenkins:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock    # <--- CRUCIAL: Gives Jenkins access to host Docker
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - devsecops-network
-    user: root                                       # <--- CRUCIAL: Grants permissions to read the socket
+    # --- AUTOMATED ENGINE PROVISIONING ---
+    # This automatically updates the container OS and drops the Docker CLI engine binary in at startup
+    entrypoint: >
+      bash -c "
+      apt-get update &&
+      apt-get install -y ca-certificates curl gnupg &&
+      install -m 0755 -d /etc/apt/keyrings &&
+      curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg --yes &&
+      chmod a+r /etc/apt/keyrings/docker.gpg &&
+      echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable' > /etc/apt/sources.list.d/docker.list &&
+      apt-get update &&
+      apt-get install -y docker-ce-cli &&
+      exec /usr/bin/tini -- /usr/local/bin/jenkins.sh
+      "             # <--- CRUCIAL: Grants permissions to read the socket
   # 2. SonarQube (SAST Code Quality)
   sonarqube:
     image: sonarqube:lts-community
