@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONAR_SERVER_NAME = 'sonar-server'
         // Points to our local registry over the shared Docker bridge network
-        REGISTRY_URL      = 'devsecops-registry:5000' 
+        REGISTRY_URL      = '127.0.0.1:5001'
         IMAGE_NAME        = 'vprofile-app'
         BUILD_TAG         = "${BUILD_NUMBER}"
     }
