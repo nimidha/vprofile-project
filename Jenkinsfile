@@ -71,7 +71,7 @@ pipeline {
         }
     }
 
-    ppost {
+    post {
         success {
             echo 'Pipeline completed successfully. Artifact is ready for Ansible/Kubernetes deployment.'
         }
