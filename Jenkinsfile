@@ -1,5 +1,8 @@
 pipeline {
     agent any // Simplifies executor allocation across all stages smoothly
+    tools {
+        maven 'maven3' 
+    }
 
     environment {
         REGISTRY_URL   = "localhost:5001"
