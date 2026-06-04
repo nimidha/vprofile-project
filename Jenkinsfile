@@ -71,7 +71,7 @@ pipeline {
         }
     }
 
-    post {
+    ppost {
         success {
             echo 'Pipeline completed successfully. Artifact is ready for Ansible/Kubernetes deployment.'
         }
@@ -80,7 +80,11 @@ pipeline {
         }
         cleanup {
             echo 'Wiping build artifacts and cleaning workspace execution footprints...'
-            cleanWs catchException: true // Production safeguard: wipes workspace without crashing the master build if directories are absent
+            // 2+ Years MNC Standard: Native error handling to prevent cleanup failures from corrupting job status
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                cleanWs()
+            }
         }
     }
+
 }
