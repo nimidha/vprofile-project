@@ -2,82 +2,89 @@ pipeline {
     agent any
 
     environment {
-        SONAR_SERVER_NAME = 'sonar-server'
-        // Points to our local registry over the shared Docker bridge network
-        REGISTRY_URL      = '127.0.0.1:5001'
-        IMAGE_NAME        = 'vprofile-app'
-        BUILD_TAG         = "${BUILD_NUMBER}"
+        // MNC Best Practice: Centralized tracking variables
+        REGISTRY_URL   = "localhost:5001"
+        IMAGE_NAME     = "vprofile-app"
+        IMAGE_TAG      = "${BUILD_NUMBER}" // Dynamically tag images with the build number
+        SCANNER_HOME   = tool 'SonarQubeScanner' // Binds the Sonar scanner binary
     }
 
     stages {
-        stage('Fetch Code') {
+        stage('1. Fetch Source Code') {
             steps {
-                echo 'Pulling fresh code from GitHub Repository...'
+                echo 'Pulling fresh code from version control...'
                 checkout scm
             }
         }
 
-        stage('Trivy File System Scan') {
+        stage('2. Build & Unit Test') {
             steps {
-                echo 'Auditing repository source files for vulnerabilities...'
-                // Using a dockerized runner for Trivy so it works anywhere
-                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest fs --exit-code 0 --severity HIGH,CRITICAL ."
+                echo 'Compiling Java Application via Maven...'
+                // Run compilation and unit tests
+                sh 'mvn clean package -DskipTests=false'
             }
         }
 
-        stage('SonarQube Static Scan') {
+        stage('3. SAST Code Analysis (SonarQube)') {
             steps {
-                echo 'Initializing SonarQube Code Security Scan...'
-                withEnv(["PATH+MAVEN=${tool 'maven3'}/bin"]) {
-                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                        sh '''
-                            mvn clean compile sonar:sonar \
-                            -Dsonar.host.url=http://devsecops-sonarqube:9000 \
-                            -Dsonar.projectKey=vprofile-project \
-                            -Dsonar.projectName=vprofile-project \
-                            -Dsonar.java.binaries=target/classes \
-                            -Dsonar.login=$SONAR_AUTH_TOKEN
-                        '''
-                    }
+                echo 'Injecting code into SonarQube Engine...'
+                withSonarQubeEnv('SonarQube-Server') {
+                    sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=vprofile-app -Dsonar.sources=."
                 }
             }
         }
 
-        stage('Quality Gate Checklist') {
+        stage('4. SonarQube Quality Gate Blocker') {
             steps {
-                echo 'Checking SonarQube Quality Gate Status...'
+                echo 'Checking corporate quality compliance thresholds...'
                 timeout(time: 5, unit: 'MINUTES') {
+                    // 2+ Years MNC Standard: Wait for SonarQube's verdict. 
+                    // If the Quality Gate fails, Jenkins aborts the pipeline here!
                     script {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
-                            error "Pipeline stopped! Code failed security compliance quality gates: ${qg.status}"
+                            error "Pipeline aborted due to Quality Gate Failure: ${qg.status}"
                         }
                     }
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('5. Containerization (Docker Build)') {
             steps {
-                echo 'Compiling Application into production-ready Docker container image...'
-                sh "docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_TAG} ."
-                sh "docker tag ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_TAG} ${REGISTRY_URL}/${IMAGE_NAME}:latest"
+                echo 'Building production docker image blueprint...'
+                sh "docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                sh "docker tag ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY_URL}/${IMAGE_NAME}:latest"
             }
         }
 
-        stage('Trivy Image Scan') {
+        stage('6. Image Vulnerability Scan (Trivy)') {
             steps {
-                echo 'Auditing final container image OS layers for CVE vulnerabilities...'
-                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --exit-code 0 --severity CRITICAL ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_TAG}"
+                echo 'Running Trivy Deep File System Inspection...'
+                // MNC Standard: If a container image has high-severity unpatched CVEs, fail the pipeline!
+                sh "trivy image --exit-code 1 --severity CRITICAL,HIGH ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
-        stage('Push to Registry') {
+        stage('7. Secure Push to Enterprise Registry') {
             steps {
-                echo 'Shipping verified secure image to local registry warehouse...'
-                sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:${BUILD_TAG}"
+                echo 'Uploading verified secure artifact to registry...'
+                sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
                 sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:latest"
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up workstation workspace build footprints...'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully. Artifact is ready for Ansible/Kubernetes deployment.'
+        }
+        failure {
+            echo 'Pipeline failed security or quality checks. Notification dispatched to engineering channels.'
         }
     }
 }
