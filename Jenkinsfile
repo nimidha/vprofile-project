@@ -1,16 +1,11 @@
 pipeline {
-    agent {
-        node {
-            label '' // Forces Jenkins to stick to a dedicated node context throughout the entire run
-        }
-    }
+    agent any // Simplifies executor allocation across all stages smoothly
 
     environment {
-        // MNC Best Practice: Centralized tracking variables
         REGISTRY_URL   = "localhost:5001"
         IMAGE_NAME     = "vprofile-app"
-        IMAGE_TAG      = "${BUILD_NUMBER}" // Dynamically tag images with the build number
-        SCANNER_HOME   = tool 'SonarQubeScanner' // Binds the Sonar scanner binary
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        SCANNER_HOME   = tool 'SonarQubeScanner' // Looks up the tool name we registered above
     }
 
     stages {
@@ -24,7 +19,6 @@ pipeline {
         stage('2. Build & Unit Test') {
             steps {
                 echo 'Compiling Java Application via Maven...'
-                // Run compilation and unit tests
                 sh 'mvn clean package -DskipTests=false'
             }
         }
@@ -32,7 +26,8 @@ pipeline {
         stage('3. SAST Code Analysis (SonarQube)') {
             steps {
                 echo 'Injecting code into SonarQube Engine...'
-                withSonarQubeEnv('SonarQube-Server') {
+                withSonarQubeEnv('SonarQube-Server') { 
+                    // Make sure 'SonarQube-Server' matches your Jenkins System configuration name!
                     sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=vprofile-app -Dsonar.sources=."
                 }
             }
@@ -42,8 +37,6 @@ pipeline {
             steps {
                 echo 'Checking corporate quality compliance thresholds...'
                 timeout(time: 5, unit: 'MINUTES') {
-                    // 2+ Years MNC Standard: Wait for SonarQube's verdict. 
-                    // If the Quality Gate fails, Jenkins aborts the pipeline here!
                     script {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
@@ -65,7 +58,6 @@ pipeline {
         stage('6. Image Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Running Trivy Deep File System Inspection...'
-                // MNC Standard: If a container image has high-severity unpatched CVEs, fail the pipeline!
                 sh "trivy image --exit-code 1 --severity CRITICAL,HIGH ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
@@ -80,15 +72,15 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Cleaning up workstation workspace build footprints...'
-            cleanWs()
-        }
         success {
             echo 'Pipeline completed successfully. Artifact is ready for Ansible/Kubernetes deployment.'
         }
         failure {
             echo 'Pipeline failed security or quality checks. Notification dispatched to engineering channels.'
+        }
+        cleanup {
+            echo 'Wiping build artifacts and cleaning workspace execution footprints...'
+            cleanWs catchException: true // Production safeguard: wipes workspace without crashing the master build if directories are absent
         }
     }
 }
