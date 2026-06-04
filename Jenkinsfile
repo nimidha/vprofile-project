@@ -29,9 +29,14 @@ pipeline {
         stage('3. SAST Code Analysis (SonarQube)') {
             steps {
                 echo 'Injecting code into SonarQube Engine...'
-                withSonarQubeEnv('SonarQube-Server') { 
-                    // Make sure 'SonarQube-Server' matches your Jenkins System configuration name!
-                    sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=vprofile-app -Dsonar.sources=."
+                withSonarQubeEnv('SonarQube-Server') {
+                    // MNC Production Standard: Explicitly pass source locations and target binaries properties
+                    sh """
+                        ${SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectKey=vprofile-app \
+                        -Dsonar.sources=. \
+                        -Dsonar.java.binaries=target/classes
+                    """
                 }
             }
         }
