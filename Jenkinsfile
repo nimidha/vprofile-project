@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        node {
+            label '' // Forces Jenkins to stick to a dedicated node context throughout the entire run
+        }
+    }
 
     environment {
         // MNC Best Practice: Centralized tracking variables
