@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  ministack:
+    container_name: ministack_main
+    image: ministackorg/ministack:latest
+    ports:
+      - "127.0.0.1:4566:4566"  # Seamless drop-in replacement port
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"  # Allows MiniStack to boot a real MySQL database

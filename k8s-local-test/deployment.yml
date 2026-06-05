@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment        # Tells K8s we want a Deployment manager
+metadata:
+  name: nginx-webapp    # The administrative name of this deployment
+spec:
+  replicas: 2           # <--- Desired State: K8s will ensure exactly 2 Pods run at all times
+  selector:
+    matchLabels:
+      app: web-server   # Tells the deployment manager which Pods belong to it
+  template:
+    metadata:
+      labels:
+        app: web-server # The label attached to our Pods
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest   # The standard Docker Hub image to pull
+        ports:
+        - containerPort: 80   # The internal port the application listens on

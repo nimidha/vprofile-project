@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # 1. Jenkins Orchestrator
+  jenkins:
+    container_name: devsecops-jenkins
+    image: jenkins/jenkins:lts-jdk17
+    user: root
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - ./volume/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devsecops-network
+    # --- AUTOMATED ENGINE PROVISIONING ---
+    # This automatically updates the container OS and drops the Docker CLI engine binary in at startup
+    entrypoint: >
+      bash -c "
+      apt-get update &&
+      apt-get install -y ca-certificates curl gnupg &&
+      install -m 0755 -d /etc/apt/keyrings &&
+      curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg --yes &&
+      chmod a+r /etc/apt/keyrings/docker.gpg &&
+      echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable' > /etc/apt/sources.list.d/docker.list &&
+      apt-get update &&
+      apt-get install -y docker-ce-cli &&
+      exec /usr/bin/tini -- /usr/local/bin/jenkins.sh
+      "             # <--- CRUCIAL: Grants permissions to read the socket
+  # 2. SonarQube (SAST Code Quality)
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: devsecops-sonarqube
+    ports:
+      - "9001:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - devsecops-network
+
+  # 3. LocalStack (Mock AWS ECR Cloud Environment)
+  local-registry:
+    container_name: devsecops-registry
+    image: registry:2
+    ports:
+      - "127.0.0.1:5001:5000"            # Map host port 5001 to container port 5000
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    volumes:
+      - "./volume/registry:/var/lib/registry"
+    networks:
+      - devsecops-network
+
+volumes:
+  jenkins_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  localstack_data:
+
+networks:
+  devsecops-network:
+    name: devsecops-network

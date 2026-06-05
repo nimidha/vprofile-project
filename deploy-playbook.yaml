@@ -1,0 +1,30 @@
+---
+- name: Enterprise Orchestration - Deploy vProfile to Kubernetes Cluster
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: 1. Validate Kubernetes Manifest Files Exist
+      stat:
+        path: "{{ item }}"
+      register: file_status
+      loop:
+        - ./k8s-manifests/deployment.yaml
+        - ./k8s-manifests/service.yaml
+
+    - name: 2. Apply Security and Deployment State via K8s Core Engine
+      kubernetes.core.k8s:
+        state: present
+        src: "./k8s-manifests/deployment.yaml"
+
+    - name: 3. Expose Enterprise Network Load Balancer Routing
+      kubernetes.core.k8s:
+        state: present
+        src: "./k8s-manifests/service.yaml"
+
+    - name: 4. Verify Rolling Update Deployment Progress
+      shell: "kubectl rollout status deployment/vprofile-app-deployment --timeout=60s"
+      register: rollout_verify
+
+    - name: 5. Print Production Deployment Rollout Verdict
+      debug:
+        msg: "Application is live! Verification Logs: {{ rollout_verify.stdout }}"

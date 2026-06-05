@@ -1,0 +1,12 @@
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+target/
+*.war
+*.jar
+.DS_Store
+*.log
+
+# Ignore container data persistence directories
+volume/

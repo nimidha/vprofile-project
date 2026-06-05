@@ -1,0 +1,5 @@
+volume/
+.git/
+Jenkinsfile
+docker-compose.yml
+deployment.yml
