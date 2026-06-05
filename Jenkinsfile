@@ -69,7 +69,7 @@ pipeline {
                 // Soften the gate temporarily to let the build pass for validation
                 sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
-        }`
+        }
 
         stage('7. Secure Push to Enterprise Registry') {
             steps {
