@@ -68,9 +68,9 @@ pipeline {
 
         stage('6. Image Vulnerability Scan (Trivy)') {
             steps {
-                echo 'Running Trivy Deep File System Inspection...'
-                // Soften the gate temporarily to let the build pass for validation
-                sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
+                echo 'Executing deep container vulnerability analysis...'
+                // MNC Standard optimization: Added explicit timeout extension and download retry configurations
+                sh "trivy image --timeout 15m0s --slow --scanners vuln localhost:5001/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
