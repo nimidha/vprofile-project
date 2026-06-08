@@ -28,8 +28,8 @@
         namespace: default # Explicit namespace declaration for orchestration stability
 
     - name: 4. Verify Rolling Update Deployment Progress
-      shell: "kubectl rollout status deployment/vprofile-app-deployment --timeout=60s --kubeconfig=/var/jenkins_home/.kube/config"
-      register: rollout_verify
+        shell: "kubectl rollout status deployment/vprofile-app-deployment --timeout=60s --kubeconfig=/var/jenkins_home/.kube/config --insecure-skip-tls-verify=true"
+        register: rollout_verify
 
     - name: 5. Print Production Deployment Rollout Verdict
       debug:
