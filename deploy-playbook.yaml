@@ -15,15 +15,17 @@
       kubernetes.core.k8s:
         state: present
         src: "./k8s-manifests/deployment.yaml"
-        kubeconfig: "/var/jenkins_home/.kube/config" # Explicit container pathway override
+        kubeconfig: "/var/jenkins_home/.kube/config"
         validate_certs: false
+        namespace: default # Explicit namespace declaration for orchestration stability
 
     - name: 3. Expose Enterprise Network Load Balancer Routing
       kubernetes.core.k8s:
         state: present
         src: "./k8s-manifests/service.yaml"
-        kubeconfig: "/var/jenkins_home/.kube/config" # Explicit container pathway override
+        kubeconfig: "/var/jenkins_home/.kube/config"
         validate_certs: false
+        namespace: default # Explicit namespace declaration for orchestration stability
 
     - name: 4. Verify Rolling Update Deployment Progress
       shell: "kubectl rollout status deployment/vprofile-app-deployment --timeout=60s --kubeconfig=/var/jenkins_home/.kube/config"
