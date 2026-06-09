@@ -17,7 +17,7 @@
         src: "./k8s-manifests/deployment.yaml"
         kubeconfig: "/var/jenkins_home/.kube/config"
         validate_certs: false
-        namespace: default # Explicit namespace declaration for orchestration stability
+        namespace: default
 
     - name: 3. Expose Enterprise Network Load Balancer Routing
       kubernetes.core.k8s:
@@ -25,11 +25,11 @@
         src: "./k8s-manifests/service.yaml"
         kubeconfig: "/var/jenkins_home/.kube/config"
         validate_certs: false
-        namespace: default # Explicit namespace declaration for orchestration stability
+        namespace: default
 
     - name: 4. Verify Rolling Update Deployment Progress
-        shell: "kubectl rollout status deployment/vprofile-app-deployment --timeout=60s --kubeconfig=/var/jenkins_home/.kube/config --insecure-skip-tls-verify=true"
-        register: rollout_verify
+      shell: "kubectl rollout status deployment/vprofile-app-deployment --timeout=60s --kubeconfig=/var/jenkins_home/.kube/config --insecure-skip-tls-verify=true"
+      register: rollout_verify
 
     - name: 5. Print Production Deployment Rollout Verdict
       debug:
