@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: vprofile-container
-        image: localhost:5001/vprofile-app:latest # Pulls directly from the registry you just built!
+        image: 172.17.0.1:5001/vprofile-app:latest # Pulls directly from the registry you just built!
         ports:
         - containerPort: 8080
         resources:
