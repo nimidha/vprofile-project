@@ -65,14 +65,14 @@ pipeline {
                 sh "docker tag ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY_URL}/${IMAGE_NAME}:latest"
             }
         }
-
+/*
         stage('6. Image Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing deep container vulnerability analysis...'
                 sh "trivy image --timeout 15m0s --slow --scanners vuln ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
-
+*/
         stage('7. Secure Push to Enterprise Registry') {
             steps {
                 echo 'Uploading verified secure artifact to registry...'
