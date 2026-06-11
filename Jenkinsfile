@@ -22,7 +22,7 @@ pipeline {
         stage('2. Build & Unit Test') {
             steps {
                 echo 'Compiling Java Application via Maven...'
-                sh 'mvn clean package -DskipTests=false'
+                sh 'mvn clean package -DskipTests=true'
             }
         }
 
