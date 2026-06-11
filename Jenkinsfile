@@ -5,10 +5,10 @@ pipeline {
     }
 
     environment {
-        REGISTRY_URL   = "localhost:5001"
+        REGISTRY_URL   = "172.17.0.1:5001"
         IMAGE_NAME     = "vprofile-app"
         IMAGE_TAG      = "${BUILD_NUMBER}"
-        SCANNER_HOME   = tool 'SonarQubeScanner' // Looks up the tool name we registered above
+        SCANNER_HOME   = tool 'SonarQubeScanner'
     }
 
     stages {
@@ -69,8 +69,7 @@ pipeline {
         stage('6. Image Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing deep container vulnerability analysis...'
-                // MNC Standard optimization: Added explicit timeout extension and download retry configurations
-                sh "trivy image --timeout 15m0s --slow --scanners vuln localhost:5001/${IMAGE_NAME}:${IMAGE_TAG}"
+                sh "trivy image --timeout 15m0s --slow --scanners vuln ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
