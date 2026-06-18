@@ -68,14 +68,13 @@ pipeline {
 
        // What a production enterprise stage looks like using a pre-packaged tool agent
         stage('6. Image Vulnerability Scan (Trivy)') {
-            agent {
-                docker { image 'aquasec/trivy:latest' } // Jenkins automatically spins up a container that has Trivy ready to go
-            }
             steps {
-                sh "trivy image ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
+                echo 'Running Trivy via automated standalone container engine...'
+                // Run Trivy inside a temporary container that links to our network registry
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m0s --slow --scanners vuln ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
-
+        
         stage('7. Secure Push to Enterprise Registry') {
             steps {
                 echo 'Uploading verified secure artifact to registry...'
