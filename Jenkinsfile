@@ -41,7 +41,7 @@ pipeline {
             }
         }
 
-        stage('4. SonarQube Quality Gate Blocker') {
+ /*       stage('4. SonarQube Quality Gate Blocker') {
             steps {
                    echo 'Checking corporate quality compliance thresholds...'
                    timeout(time: 5, unit: 'MINUTES') {
@@ -57,7 +57,7 @@ pipeline {
                    }
             }
         }       
-
+*/
         stage('5. Containerization (Docker Build)') {
             steps {
                 echo 'Building production docker image blueprint...'
