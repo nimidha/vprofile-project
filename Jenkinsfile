@@ -70,10 +70,9 @@ pipeline {
             steps {
                 echo 'Downloading and executing standalone container vulnerability analysis...'
                 script {
-                    // Download standalone portable binary, extract it locally, and run it
                     sh """
-                        wget https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz
-                        tar -xzf trivy_0.48.3_Linux-64bit.tar.gz
+                        curl -L -o trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz
+                        tar -xzf trivy.tar.gz
                         ./trivy image --timeout 15m0s --slow --scanners vuln ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
