@@ -74,7 +74,7 @@ pipeline {
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m0s --slow --scanners vuln ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
-        
+
         stage('7. Secure Push to Enterprise Registry') {
             steps {
                 echo 'Uploading verified secure artifact to registry...'
@@ -85,9 +85,9 @@ pipeline {
 
         stage('8. Automated GitOps Deployment (Ansible & K8s)') {
             steps {
-                echo 'Triggering Ansible Playbook Orchestration...'
-                // MNC Standard: Execute deployment configurations via version-controlled playbooks
-                sh "ansible-playbook deploy-playbook.yaml"
+                echo 'Bypassing Ansible: Executing direct deployment via Manifest Apply...'
+                // Force Kubernetes to update the active deployment image to our fresh build tag
+                sh "kubectl set image deployment/vprofile-app-deployment tomcat-container=${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} --validate=false"
             }
         }
     }
