@@ -66,16 +66,13 @@ pipeline {
             }
         }
 
-       stage('6. Image Vulnerability Scan (Trivy)') {
+       // What a production enterprise stage looks like using a pre-packaged tool agent
+        stage('6. Image Vulnerability Scan (Trivy)') {
+            agent {
+                docker { image 'aquasec/trivy:latest' } // Jenkins automatically spins up a container that has Trivy ready to go
+            }
             steps {
-                echo 'Downloading and executing standalone container vulnerability analysis...'
-                script {
-                    sh """
-                        curl -L -o trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz
-                        tar -xzf trivy.tar.gz
-                        ./trivy image --timeout 15m0s --slow --scanners vuln ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}
-                    """
-                }
+                sh "trivy image ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
