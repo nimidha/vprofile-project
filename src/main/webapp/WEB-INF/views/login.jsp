@@ -53,6 +53,9 @@
                                 <li><a href="#">ABOUT</a></li>
                                 <li><a href="#">BLOG</a></li>
                             </ul>
+                            <div style="background-color: #d4edda; color: #155724; padding: 15px; text-align: center; font-weight: bold; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 5px;">
+    🚀 SYSTEM UPDATE: PROD ENVIRONMENT - VERSION 2.0.0 (SECURE)
+</div>
                             <div class="navbar-collapse navbar-right collapse">
 	                            <ul class="nav navbar-nav">
 	                        	 <li><a href="${contextPath}/login">LOGIN</a></li>

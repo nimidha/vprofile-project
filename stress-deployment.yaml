@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stress-payload
+  labels:
+    app: stress-payload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stress-payload
+  template:
+    metadata:
+      labels:
+        app: stress-payload
+    spec:
+      imagePullSecrets:
+      - name: my-dockerhub-secret
+      containers:
+      - name: stress
+        image: vbehar/stress
+        args: ["--cpu", "1", "--vm", "1", "--vm-bytes", "128M"]

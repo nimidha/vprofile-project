@@ -15,7 +15,7 @@ LABEL author="devsecops-lab"
 RUN rm -rf /usr/local/tomcat/webapps/*
 
 # Copy the compiled .war file from the build stage into Tomcat's deployment directory
-COPY --from=build-stage /app/target/vprofile-v2.war /usr/local/tomcat/webapps/ROOT.war
+COPY --from=build-stage /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
